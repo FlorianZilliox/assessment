@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pod Delivery Assessment Tool</title>
+    <link rel="stylesheet" href="main.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Start Screen -->
+        <div id="start-screen" class="screen">
+            <div class="content-card">
+                <h1 class="text-center">Pod Delivery Assessment Tool</h1>
+                <h2 class="text-center text-secondary">Quarterly Pod Maturity Evaluation</h2>
+                
+                <div class="form-group mt-8">
+                    <label for="pod-name" class="form-label">Pod Name</label>
+                    <input type="text" id="pod-name" class="form-input" placeholder="Enter your pod name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="quarter" class="form-label">Quarter</label>
+                    <input type="text" id="quarter" class="form-input" placeholder="e.g., Q1 2024">
+                </div>
+                
+                <div class="nav-buttons center">
+                    <button id="start-btn" class="btn btn-primary btn-large">Start Assessment</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Assessment Screen -->
+        <div id="assessment-screen" class="screen" style="display: none;">
+            <div class="content-card">
+                <div class="progress-bar">
+                    <div id="progress-fill" class="progress-fill" style="width: 0%"></div>
+                </div>
+                
+                <div class="header">
+                    <div class="dimension-label" id="dimension-name">Workflow Mastery</div>
+                    <div class="question-counter" id="question-counter">1 / 36</div>
+                </div>
+                
+                <div id="question-text" class="question-text">
+                    The pod tracks workflow KPIs and clearly identifies bottlenecks in their process
+                </div>
+                
+                <!-- Type A: Standard 1-6 scale -->
+                <div id="type-a-scoring" class="score-grid">
+                    <button class="score-btn" data-score="1">1</button>
+                    <button class="score-btn" data-score="2">2</button>
+                    <button class="score-btn" data-score="3">3</button>
+                    <button class="score-btn" data-score="4">4</button>
+                    <button class="score-btn" data-score="5">5</button>
+                    <button class="score-btn" data-score="6">6</button>
+                </div>
+
+                <!-- Type B: Frequency/Count options -->
+                <div id="type-b-scoring" class="options-grid" style="display: none;">
+                    <!-- Options will be populated dynamically -->
+                </div>
+
+                <!-- Type C: Binary with maturity levels -->
+                <div id="type-c-scoring" class="options-list" style="display: none;">
+                    <!-- Options will be populated dynamically -->
+                </div>
+                
+                <div class="nav-buttons">
+                    <button id="prev-btn" class="btn btn-secondary">Previous</button>
+                    <button id="next-btn" class="btn btn-primary" disabled>Next</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="results-screen" class="screen" style="display: none;">
+            <div class="content-card">
+                <h1 class="text-center">Assessment Results</h1>
+                <div id="pod-results-title" class="text-center text-secondary mt-4"></div>
+                
+                <div class="results-summary">
+                    <div class="summary-card">
+                        <div class="summary-title">Overall Score</div>
+                        <div id="overall-score" class="summary-value">4.2</div>
+                    </div>
+                    <div class="summary-card">
+                        <div class="summary-title">Completion Date</div>
+                        <div id="completion-date" class="summary-value"></div>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <canvas id="radar-chart" width="500" height="500"></canvas>
+                </div>
+                
+                <div class="export-group">
+                    <button id="export-csv" class="btn btn-secondary">Export CSV</button>
+                    <button id="export-pdf" class="btn btn-secondary">Export PDF</button>
+                    <button id="restart-btn" class="btn btn-primary">New Assessment</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="csv-loader.js"></script>
+    <script src="assessment-data.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
