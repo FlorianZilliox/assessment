@@ -1,4 +1,5 @@
 // main.js - Main application logic
+import { ASSESSMENT_DATA, validateAssessmentData } from './questions-data.js';
 
 class PodAssessment {
   constructor() {
@@ -14,17 +15,15 @@ class PodAssessment {
     this.initializeApp();
   }
 
-  async initializeApp() {
+  initializeApp() {
     try {
-      // Show loading message
-      this.showLoadingMessage();
-      
-      // Initialize assessment data from CSV
-      await initializeAssessmentData();
+      // Load and validate assessment data
+      this.assessmentData = ASSESSMENT_DATA;
+      this.validateData();
+      this.setupQuestions();
       this.dataLoaded = true;
       
-      // Hide loading message and continue with normal initialization
-      this.hideLoadingMessage();
+      // Initialize UI
       this.bindEvents();
       this.loadSavedSession();
       this.showScreen('start-screen');
@@ -35,29 +34,57 @@ class PodAssessment {
     }
   }
 
-  showLoadingMessage() {
-    const loadingDiv = document.createElement('div');
-    loadingDiv.id = 'loading-message';
-    loadingDiv.className = 'screen';
-    loadingDiv.innerHTML = `
-      <div class="content-card">
-        <div style="text-align: center;">
-          <h2>Loading Assessment...</h2>
-          <p style="margin-top: 20px; color: var(--color-text-secondary);">
-            Please wait while we load the questions configuration.
-          </p>
-        </div>
-      </div>
-    `;
-    document.querySelector('.app-container').appendChild(loadingDiv);
+  validateData() {
+    const errors = validateAssessmentData();
+    if (errors.length > 0) {
+      console.error('Data validation errors:', errors);
+      throw new Error('Assessment data validation failed: ' + errors.join(', '));
+    }
+    console.log('✅ Assessment data validation passed');
   }
 
-  hideLoadingMessage() {
-    const loadingDiv = document.getElementById('loading-message');
-    if (loadingDiv) {
-      loadingDiv.remove();
+  setupQuestions() {
+    // Create flattened question structure
+    this.allQuestions = [];
+    let questionIndex = 0;
+
+    this.assessmentData.dimensions.forEach((dimension, dimIndex) => {
+      const dimQuestions = this.assessmentData.questions
+        .filter(q => q.dimensionId === dimension.id);
+
+      dimQuestions.forEach((question, qIndex) => {
+        this.allQuestions.push({
+          ...question,
+          dimensionIndex: dimIndex,
+          dimensionName: dimension.name,
+          dimensionDescription: dimension.description,
+          questionInDimension: qIndex + 1,
+          totalInDimension: dimQuestions.length,
+          globalIndex: questionIndex
+        });
+        questionIndex++;
+      });
+    });
+
+    this.TOTAL_QUESTIONS = this.allQuestions.length;
+    
+    // Validate that all questions have why content
+    const questionsWithWhy = this.allQuestions.filter(q => 
+      q.whyContent && q.whyContent.whyMatters
+    ).length;
+    
+    console.log(`🎯 Loaded ${this.TOTAL_QUESTIONS} questions, ${questionsWithWhy} with complete why content`);
+    
+    if (this.TOTAL_QUESTIONS !== 36) {
+      console.warn(`⚠️ Expected 36 questions but loaded ${this.TOTAL_QUESTIONS}`);
+    }
+    
+    if (questionsWithWhy !== this.TOTAL_QUESTIONS) {
+      console.warn(`⚠️ ${this.TOTAL_QUESTIONS - questionsWithWhy} questions missing why content`);
     }
   }
+
+  // Loading methods removed - no longer needed with ES6 modules
 
   showErrorMessage(message) {
     const errorDiv = document.createElement('div');
@@ -186,7 +213,7 @@ class PodAssessment {
   }
 
   selectScore(scoreOrOption) {
-    const currentQuestion = allQuestions[this.currentQuestionIndex];
+    const currentQuestion = this.allQuestions[this.currentQuestionIndex];
     
     if (currentQuestion.type === 'A') {
       // Direct score for Type A
@@ -219,7 +246,7 @@ class PodAssessment {
       btn.classList.remove('selected');
     });
 
-    const currentQuestion = allQuestions[this.currentQuestionIndex];
+    const currentQuestion = this.allQuestions[this.currentQuestionIndex];
     const storedScore = this.scores[currentQuestion.id];
 
     if (storedScore) {
@@ -239,15 +266,15 @@ class PodAssessment {
   }
 
   updateQuestion() {
-    const currentQuestion = allQuestions[this.currentQuestionIndex];
-    const progress = ((this.currentQuestionIndex + 1) / TOTAL_QUESTIONS) * 100;
+    const currentQuestion = this.allQuestions[this.currentQuestionIndex];
+    const progress = ((this.currentQuestionIndex + 1) / this.TOTAL_QUESTIONS) * 100;
 
     // Update progress bar
     document.getElementById('progress-fill').style.width = `${progress}%`;
 
     // Update header
     document.getElementById('dimension-name').textContent = currentQuestion.dimensionName;
-    document.getElementById('question-counter').textContent = `${this.currentQuestionIndex + 1} / ${TOTAL_QUESTIONS}`;
+    document.getElementById('question-counter').textContent = `${this.currentQuestionIndex + 1} / ${this.TOTAL_QUESTIONS}`;
 
     // Update question text
     document.getElementById('question-text').textContent = currentQuestion.text;
@@ -258,7 +285,7 @@ class PodAssessment {
     // Update navigation buttons
     document.getElementById('prev-btn').disabled = this.currentQuestionIndex === 0;
     document.getElementById('next-btn').textContent = 
-      this.currentQuestionIndex === TOTAL_QUESTIONS - 1 ? 'Finish' : 'Next';
+      this.currentQuestionIndex === this.TOTAL_QUESTIONS - 1 ? 'Finish' : 'Next';
 
     // Check if question is already answered
     const existingScore = this.scores[currentQuestion.id];
@@ -373,7 +400,7 @@ class PodAssessment {
   }
 
   nextQuestion() {
-    const currentQuestion = allQuestions[this.currentQuestionIndex];
+    const currentQuestion = this.allQuestions[this.currentQuestionIndex];
     
     if (!this.scores[currentQuestion.id]) {
       alert('Please select a score before continuing');
@@ -400,7 +427,7 @@ class PodAssessment {
     this.dimensionScores = {};
     
     // Calculate average score for each dimension using normalized scores
-    assessmentData.dimensions.forEach(dimension => {
+    this.assessmentData.dimensions.forEach(dimension => {
       const dimensionQuestions = dimension.questions;
       let totalScore = 0;
       let questionCount = 0;
@@ -573,7 +600,7 @@ class PodAssessment {
     const ctx = document.getElementById('radar-chart').getContext('2d');
     
     // Create multi-line labels for long dimension names
-    const labels = assessmentData.dimensions.map(d => {
+    const labels = this.assessmentData.dimensions.map(d => {
       const name = d.name;
       
       // Split long names into multiple lines
@@ -595,7 +622,7 @@ class PodAssessment {
       return name; // Return as single line if short enough
     });
     
-    const data = assessmentData.dimensions.map(d => this.dimensionScores[d.id].average);
+    const data = this.assessmentData.dimensions.map(d => this.dimensionScores[d.id].average);
 
     if (this.chart) {
       this.chart.destroy();
@@ -715,7 +742,7 @@ class PodAssessment {
     csv += 'Dimension Scores\n';
     csv += 'Dimension,Average Score,Total Points,Questions Count\n';
     
-    assessmentData.dimensions.forEach(dimension => {
+    this.assessmentData.dimensions.forEach(dimension => {
       const score = this.dimensionScores[dimension.id];
       csv += `"${dimension.name}",${score.average.toFixed(2)},${score.total},${score.count}\n`;
     });
@@ -792,7 +819,7 @@ class PodAssessment {
     
     // Dimension rows
     doc.setTextColor(...textColor);
-    assessmentData.dimensions.forEach((dimension) => {
+    this.assessmentData.dimensions.forEach((dimension) => {
       const score = this.dimensionScores[dimension.id];
       const level = this.getScoreLevel(score.average);
       
@@ -946,7 +973,7 @@ class PodAssessment {
     yPos += 10;
     
     doc.setFontSize(9);
-    Object.entries(assessmentData.scoreGuide).reverse().forEach(([score, guide]) => {
+    Object.entries(this.assessmentData.scoreGuide).reverse().forEach(([score, guide]) => {
       doc.setTextColor(...this.getScoreColor(parseInt(score)));
       doc.text(`${score} - ${guide.level}:`, 20, yPos);
       doc.setTextColor(...textColor);
@@ -964,7 +991,7 @@ class PodAssessment {
     yPos += 15;
     
     // Detailed responses
-    assessmentData.dimensions.forEach((dimension) => {
+    this.assessmentData.dimensions.forEach((dimension) => {
       if (yPos > 250) {
         doc.addPage();
         yPos = 20;
@@ -1063,7 +1090,7 @@ class PodAssessment {
   }
 
   openWhyModal() {
-    const currentQuestion = allQuestions[this.currentQuestionIndex];
+    const currentQuestion = this.allQuestions[this.currentQuestionIndex];
     if (!currentQuestion.whyContent || !currentQuestion.whyContent.whyMatters) {
       return; // No content available
     }
