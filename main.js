@@ -1,6 +1,18 @@
 // main.js - Main application logic
 import { ASSESSMENT_DATA, validateAssessmentData } from './questions-data.js';
 
+// Normalizer pour les scores Type B et C
+class ScoreNormalizer {
+  static normalizeScore(question, selectedOption) {
+    if (question.type === 'A') {
+      return selectedOption;
+    }
+    // Pour Type B et C, trouve la valeur dans les options
+    const option = question.options.find(o => o.label === selectedOption);
+    return option ? option.value : null;
+  }
+}
+
 class PodAssessment {
   constructor() {
     this.currentQuestionIndex = 0;
@@ -407,7 +419,7 @@ class PodAssessment {
       return;
     }
 
-    if (this.currentQuestionIndex < TOTAL_QUESTIONS - 1) {
+    if (this.currentQuestionIndex < this.TOTAL_QUESTIONS - 1) {
       this.currentQuestionIndex++;
       this.updateQuestion();
     } else {
@@ -428,7 +440,7 @@ class PodAssessment {
     
     // Calculate average score for each dimension using normalized scores
     this.assessmentData.dimensions.forEach(dimension => {
-      const dimensionQuestions = dimension.questions;
+      const dimensionQuestions = this.assessmentData.questions.filter(q => q.dimensionId === dimension.id);
       let totalScore = 0;
       let questionCount = 0;
 
@@ -471,7 +483,7 @@ class PodAssessment {
     
     // 2. Identify specific low-scoring questions within any dimension
     const lowScoringQuestions = [];
-    allQuestions.forEach(question => {
+    this.allQuestions.forEach(question => {
       const scoreData = this.scores[question.id];
       if (scoreData && scoreData.normalizedScore <= 3) {
         lowScoringQuestions.push({
@@ -750,7 +762,7 @@ class PodAssessment {
     csv += '\nDetailed Responses\n';
     csv += 'Question ID,Dimension,Question,Raw Response,Normalized Score\n';
 
-    allQuestions.forEach(question => {
+    this.allQuestions.forEach(question => {
       const scoreData = this.scores[question.id];
       if (scoreData) {
         csv += `${question.id},"${question.dimensionName}","${question.text}","${scoreData.rawValue}",${scoreData.normalizedScore}\n`;
@@ -1024,7 +1036,8 @@ class PodAssessment {
       }
       yPos += 8;
       
-      dimension.questions.forEach((question) => {
+      const dimensionQuestions = this.assessmentData.questions.filter(q => q.dimensionId === dimension.id);
+      dimensionQuestions.forEach((question) => {
         if (yPos > 270) {
           doc.addPage();
           yPos = 20;
