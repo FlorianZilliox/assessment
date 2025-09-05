@@ -75,6 +75,50 @@
             </div>
         </div>
 
+        <!-- Why Does It Matter Tab & Modal -->
+        <button id="why-tab" class="why-tab" style="display: none;">
+            <span class="why-tab-text">Why does it matter?</span>
+        </button>
+
+        <div id="why-modal-backdrop" class="why-modal-backdrop">
+            <div id="why-modal" class="why-modal">
+                <div class="why-modal-header">
+                    <h3 class="why-modal-title">Question <span id="why-question-number">1</span></h3>
+                    <button class="why-modal-close" id="why-modal-close">&times;</button>
+                </div>
+                <div class="why-modal-body">
+                    <div class="why-section">
+                        <h4 class="why-section-title">Why This Matters</h4>
+                        <div class="why-section-content" id="why-matters-content">
+                            <!-- Content injected by JS -->
+                        </div>
+                    </div>
+                    
+                    <div class="why-section">
+                        <h4 class="why-section-title">✅ When Done Well</h4>
+                        <div class="why-section-content">
+                            <ul id="when-done-well-list">
+                                <!-- List items injected by JS -->
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="why-section">
+                        <h4 class="why-section-title">⚠️ Common Problems Without It</h4>
+                        <div class="why-section-content">
+                            <ul id="problems-without-list">
+                                <!-- List items injected by JS -->
+                            </ul>
+                        </div>
+                    </div>
+                    
+                </div>
+                <div class="why-modal-footer">
+                    <button class="why-got-it-btn" id="why-got-it-btn">Got it!</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Results Screen -->
         <div id="results-screen" class="screen" style="display: none;">
             <div class="content-card">

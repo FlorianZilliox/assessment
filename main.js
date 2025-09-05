@@ -9,6 +9,7 @@ class PodAssessment {
     this.startTime = null;
     this.endTime = null;
     this.dataLoaded = false;
+    this.whyModalOpen = false;
     
     this.initializeApp();
   }
@@ -113,6 +114,32 @@ class PodAssessment {
     // Add ripple effect to buttons
     document.querySelectorAll('.btn, .score-btn').forEach(btn => {
       btn.addEventListener('click', this.createRipple);
+    });
+
+    // Why Does It Matter tab and modal
+    document.getElementById('why-tab').addEventListener('click', () => {
+      this.openWhyModal();
+    });
+
+    document.getElementById('why-modal-close').addEventListener('click', () => {
+      this.closeWhyModal();
+    });
+
+    document.getElementById('why-modal-backdrop').addEventListener('click', (e) => {
+      if (e.target.id === 'why-modal-backdrop') {
+        this.closeWhyModal();
+      }
+    });
+
+    document.getElementById('why-got-it-btn').addEventListener('click', () => {
+      this.closeWhyModal();
+    });
+
+    // ESC key to close
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && this.whyModalOpen) {
+        this.closeWhyModal();
+      }
     });
   }
 
@@ -236,6 +263,19 @@ class PodAssessment {
     // Check if question is already answered
     const existingScore = this.scores[currentQuestion.id];
     document.getElementById('next-btn').disabled = !existingScore;
+
+    // Update Why tab state
+    const whyTab = document.getElementById('why-tab');
+    if (currentQuestion.whyContent && currentQuestion.whyContent.whyMatters) {
+      whyTab.classList.remove('disabled');
+    } else {
+      whyTab.classList.add('disabled');
+    }
+    
+    // If modal is open, update content
+    if (this.whyModalOpen) {
+      this.openWhyModal();
+    }
   }
 
   showScoringInterface(question) {
@@ -1022,11 +1062,62 @@ class PodAssessment {
     return [239, 68, 68]; // Red
   }
 
+  openWhyModal() {
+    const currentQuestion = allQuestions[this.currentQuestionIndex];
+    if (!currentQuestion.whyContent || !currentQuestion.whyContent.whyMatters) {
+      return; // No content available
+    }
+    
+    // Update modal content
+    document.getElementById('why-question-number').textContent = currentQuestion.id;
+    document.getElementById('why-matters-content').textContent = currentQuestion.whyContent.whyMatters;
+    
+    // Update lists
+    const doneWellList = document.getElementById('when-done-well-list');
+    doneWellList.innerHTML = '';
+    currentQuestion.whyContent.whenDoneWell.forEach(item => {
+      const li = document.createElement('li');
+      li.textContent = item;
+      doneWellList.appendChild(li);
+    });
+    
+    const problemsList = document.getElementById('problems-without-list');
+    problemsList.innerHTML = '';
+    currentQuestion.whyContent.problemsWithout.forEach(item => {
+      const li = document.createElement('li');
+      li.textContent = item;
+      problemsList.appendChild(li);
+    });
+    
+    
+    // Show modal
+    document.getElementById('why-modal-backdrop').classList.add('active');
+    document.getElementById('why-modal').classList.add('active');
+    this.whyModalOpen = true;
+  }
+
+  closeWhyModal() {
+    document.getElementById('why-modal-backdrop').classList.remove('active');
+    document.getElementById('why-modal').classList.remove('active');
+    this.whyModalOpen = false;
+  }
+
   showScreen(screenId) {
     document.querySelectorAll('.screen').forEach(screen => {
       screen.style.display = 'none';
     });
     document.getElementById(screenId).style.display = 'flex';
+    
+    // Show/hide Why tab based on screen
+    const whyTab = document.getElementById('why-tab');
+    if (screenId === 'assessment-screen') {
+      whyTab.style.display = 'flex';
+    } else {
+      whyTab.style.display = 'none';
+      if (this.whyModalOpen) {
+        this.closeWhyModal();
+      }
+    }
   }
 
   restartAssessment() {
