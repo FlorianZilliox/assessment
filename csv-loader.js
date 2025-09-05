@@ -74,7 +74,7 @@ improvement,CONTINUOUS IMPROVEMENT,How well does the pod learn and evolve their 
     for (let i = 1; i < lines.length; i++) {
       const values = this.parseCSVLine(lines[i]);
       
-      if (values.length < headers.length) continue; // Skip incomplete lines
+      if (values.length < 6) continue; // Skip lines with too few essential columns
       
       const row = {};
       headers.forEach((header, index) => {
