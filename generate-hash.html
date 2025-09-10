@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Generate Hash</title>
+</head>
+<body>
+    <h1>Generate Hash for "meetic"</h1>
+    <button id="generate">Generate Hash</button>
+    <div id="result"></div>
+
+    <script>
+        document.getElementById('generate').addEventListener('click', async () => {
+            // Utiliser exactement la même fonction que dans auth-manager.js
+            const password = 'meetic';
+            const encoder = new TextEncoder();
+            const data = encoder.encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            
+            console.log('Hash for "meetic":', hashHex);
+            document.getElementById('result').innerHTML = `
+                <h2>Hash for "${password}":</h2>
+                <code style="background: #f0f0f0; padding: 10px; display: block; word-break: break-all;">
+                    ${hashHex}
+                </code>
+            `;
+        });
+    </script>
+</body>
+</html>

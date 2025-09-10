@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Debug</title>
+</head>
+<body>
+    <script>
+        console.log('Script loaded successfully');
+        
+        // Test the problematic line
+        const hours = 1;
+        const remainingMinutes = 30;
+        
+        try {
+            const result = `${hours}h${remainingMinutes.toString().padStart(2, '0')}`;
+            console.log('Template literal works:', result);
+        } catch (error) {
+            console.error('Template literal error:', error);
+        }
+    </script>
+</body>
+</html>
